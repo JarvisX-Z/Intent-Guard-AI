@@ -98,7 +98,7 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-router.post("/api/analyze", async (req, res) => {
+router.post("/analyze", async (req, res) => {
   const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").slice(0, 64);
 
   if (!checkRateLimit(ip)) {
@@ -278,7 +278,7 @@ ${JSON.stringify(structuredData, null, 2)}`;
   });
 });
 
-router.get("/api/analyses", async (req, res) => {
+router.get("/analyses", async (req, res) => {
   const parsed = ListAnalysesQueryParams.safeParse(req.query);
   const limit = parsed.success ? Math.min(parsed.data.limit ?? 10, 50) : 10;
 
