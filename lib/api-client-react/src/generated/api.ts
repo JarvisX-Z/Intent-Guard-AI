@@ -5,18 +5,28 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  AnalysisList,
+  AnalysisResult,
+  AnalyzeTransactionBody,
+  ErrorResponse,
+  HealthStatus,
+  ListAnalysesParams,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -92,6 +102,188 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Fetches a Solana transaction, parses instructions, and uses AI to compare against the user's stated intent
+ * @summary Analyze transaction intent
+ */
+export const getAnalyzeTransactionUrl = () => {
+  return `/api/analyze`;
+};
+
+export const analyzeTransaction = async (
+  analyzeTransactionBody: AnalyzeTransactionBody,
+  options?: RequestInit,
+): Promise<AnalysisResult> => {
+  return customFetch<AnalysisResult>(getAnalyzeTransactionUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(analyzeTransactionBody),
+  });
+};
+
+export const getAnalyzeTransactionMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeTransaction>>,
+    TError,
+    { data: BodyType<AnalyzeTransactionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyzeTransaction>>,
+  TError,
+  { data: BodyType<AnalyzeTransactionBody> },
+  TContext
+> => {
+  const mutationKey = ["analyzeTransaction"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyzeTransaction>>,
+    { data: BodyType<AnalyzeTransactionBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return analyzeTransaction(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyzeTransactionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyzeTransaction>>
+>;
+export type AnalyzeTransactionMutationBody = BodyType<AnalyzeTransactionBody>;
+export type AnalyzeTransactionMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Analyze transaction intent
+ */
+export const useAnalyzeTransaction = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeTransaction>>,
+    TError,
+    { data: BodyType<AnalyzeTransactionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyzeTransaction>>,
+  TError,
+  { data: BodyType<AnalyzeTransactionBody> },
+  TContext
+> => {
+  return useMutation(getAnalyzeTransactionMutationOptions(options));
+};
+
+/**
+ * Returns the most recent transaction analyses
+ * @summary List recent analyses
+ */
+export const getListAnalysesUrl = (params?: ListAnalysesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/analyses?${stringifiedParams}`
+    : `/api/analyses`;
+};
+
+export const listAnalyses = async (
+  params?: ListAnalysesParams,
+  options?: RequestInit,
+): Promise<AnalysisList> => {
+  return customFetch<AnalysisList>(getListAnalysesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAnalysesQueryKey = (params?: ListAnalysesParams) => {
+  return [`/api/analyses`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAnalysesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnalyses>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAnalysesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAnalyses>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAnalysesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnalyses>>> = ({
+    signal,
+  }) => listAnalyses(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAnalyses>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAnalysesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAnalyses>>
+>;
+export type ListAnalysesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List recent analyses
+ */
+
+export function useListAnalyses<
+  TData = Awaited<ReturnType<typeof listAnalyses>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAnalysesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAnalyses>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAnalysesQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

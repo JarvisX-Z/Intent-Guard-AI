@@ -8,3 +8,64 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface AnalyzeTransactionBody {
+  /**
+   * Solana transaction signature or base64-encoded raw transaction
+   * @minLength 1
+   * @maxLength 2000
+   */
+  transaction: string;
+  /**
+   * Plain text description of what the user intends to do
+   * @minLength 1
+   * @maxLength 1000
+   */
+  userIntent: string;
+  /**
+   * Optional custom Solana RPC URL
+   * @maxLength 200
+   */
+  rpcUrl?: string;
+}
+
+export interface AnalysisResult {
+  id: number;
+  transactionSignature: string;
+  userIntent: string;
+  /** Whether the transaction matches the stated intent */
+  intentMatch: boolean;
+  /**
+   * Risk score 0-100 (0 = safe, 100 = very risky)
+   * @minimum 0
+   * @maximum 100
+   */
+  riskScore: number;
+  /** Non-technical plain-language explanation of the analysis */
+  explanation: string;
+  /** Detected transaction type */
+  transactionType: string;
+  /** Program IDs involved in the transaction */
+  programs: string[];
+  /** Specific warning flags raised */
+  warnings: string[];
+  analyzedAt: string;
+}
+
+export interface AnalysisList {
+  analyses: AnalysisResult[];
+  total: number;
+}
+
+export interface ErrorResponse {
+  error: string;
+  details?: string;
+}
+
+export type ListAnalysesParams = {
+  /**
+   * @minimum 1
+   * @maximum 50
+   */
+  limit?: number;
+};

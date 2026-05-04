@@ -14,3 +14,105 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Fetches a Solana transaction, parses instructions, and uses AI to compare against the user's stated intent
+ * @summary Analyze transaction intent
+ */
+export const analyzeTransactionBodyTransactionMax = 2000;
+
+export const analyzeTransactionBodyUserIntentMax = 1000;
+
+export const analyzeTransactionBodyRpcUrlMax = 200;
+
+export const AnalyzeTransactionBody = zod.object({
+  transaction: zod
+    .string()
+    .min(1)
+    .max(analyzeTransactionBodyTransactionMax)
+    .describe("Solana transaction signature or base64-encoded raw transaction"),
+  userIntent: zod
+    .string()
+    .min(1)
+    .max(analyzeTransactionBodyUserIntentMax)
+    .describe("Plain text description of what the user intends to do"),
+  rpcUrl: zod
+    .string()
+    .max(analyzeTransactionBodyRpcUrlMax)
+    .optional()
+    .describe("Optional custom Solana RPC URL"),
+});
+
+export const analyzeTransactionResponseRiskScoreMin = 0;
+export const analyzeTransactionResponseRiskScoreMax = 100;
+
+export const AnalyzeTransactionResponse = zod.object({
+  id: zod.number(),
+  transactionSignature: zod.string(),
+  userIntent: zod.string(),
+  intentMatch: zod
+    .boolean()
+    .describe("Whether the transaction matches the stated intent"),
+  riskScore: zod
+    .number()
+    .min(analyzeTransactionResponseRiskScoreMin)
+    .max(analyzeTransactionResponseRiskScoreMax)
+    .describe("Risk score 0-100 (0 = safe, 100 = very risky)"),
+  explanation: zod
+    .string()
+    .describe("Non-technical plain-language explanation of the analysis"),
+  transactionType: zod.string().describe("Detected transaction type"),
+  programs: zod
+    .array(zod.string())
+    .describe("Program IDs involved in the transaction"),
+  warnings: zod.array(zod.string()).describe("Specific warning flags raised"),
+  analyzedAt: zod.coerce.date(),
+});
+
+/**
+ * Returns the most recent transaction analyses
+ * @summary List recent analyses
+ */
+export const listAnalysesQueryLimitDefault = 10;
+export const listAnalysesQueryLimitMax = 50;
+
+export const ListAnalysesQueryParams = zod.object({
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listAnalysesQueryLimitMax)
+    .default(listAnalysesQueryLimitDefault),
+});
+
+export const listAnalysesResponseAnalysesItemRiskScoreMin = 0;
+export const listAnalysesResponseAnalysesItemRiskScoreMax = 100;
+
+export const ListAnalysesResponse = zod.object({
+  analyses: zod.array(
+    zod.object({
+      id: zod.number(),
+      transactionSignature: zod.string(),
+      userIntent: zod.string(),
+      intentMatch: zod
+        .boolean()
+        .describe("Whether the transaction matches the stated intent"),
+      riskScore: zod
+        .number()
+        .min(listAnalysesResponseAnalysesItemRiskScoreMin)
+        .max(listAnalysesResponseAnalysesItemRiskScoreMax)
+        .describe("Risk score 0-100 (0 = safe, 100 = very risky)"),
+      explanation: zod
+        .string()
+        .describe("Non-technical plain-language explanation of the analysis"),
+      transactionType: zod.string().describe("Detected transaction type"),
+      programs: zod
+        .array(zod.string())
+        .describe("Program IDs involved in the transaction"),
+      warnings: zod
+        .array(zod.string())
+        .describe("Specific warning flags raised"),
+      analyzedAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+});

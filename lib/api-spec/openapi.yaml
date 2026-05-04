@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: analyze
+    description: Transaction intent analysis
 paths:
   /healthz:
     get:
@@ -24,6 +26,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /analyze:
+    post:
+      operationId: analyzeTransaction
+      tags: [analyze]
+      summary: Analyze transaction intent
+      description: Fetches a Solana transaction, parses instructions, and uses AI to compare against the user's stated intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeTransactionBody"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /analyses:
+    get:
+      operationId: listAnalyses
+      tags: [analyze]
+      summary: List recent analyses
+      description: Returns the most recent transaction analyses
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisList"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +98,94 @@ components:
       required:
         - status
 
+    AnalyzeTransactionBody:
+      type: object
+      properties:
+        transaction:
+          type: string
+          description: Solana transaction signature or base64-encoded raw transaction
+          minLength: 1
+          maxLength: 2000
+        userIntent:
+          type: string
+          description: Plain text description of what the user intends to do
+          minLength: 1
+          maxLength: 1000
+        rpcUrl:
+          type: string
+          description: Optional custom Solana RPC URL
+          maxLength: 200
+      required:
+        - transaction
+        - userIntent
+
+    AnalysisResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        transactionSignature:
+          type: string
+        userIntent:
+          type: string
+        intentMatch:
+          type: boolean
+          description: Whether the transaction matches the stated intent
+        riskScore:
+          type: integer
+          description: Risk score 0-100 (0 = safe, 100 = very risky)
+          minimum: 0
+          maximum: 100
+        explanation:
+          type: string
+          description: Non-technical plain-language explanation of the analysis
+        transactionType:
+          type: string
+          description: Detected transaction type
+        programs:
+          type: array
+          items:
+            type: string
+          description: Program IDs involved in the transaction
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Specific warning flags raised
+        analyzedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - transactionSignature
+        - userIntent
+        - intentMatch
+        - riskScore
+        - explanation
+        - transactionType
+        - programs
+        - warnings
+        - analyzedAt
+
+    AnalysisList:
+      type: object
+      properties:
+        analyses:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisResult"
+        total:
+          type: integer
+      required:
+        - analyses
+        - total
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+      required:
+        - error

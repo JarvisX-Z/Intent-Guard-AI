@@ -6,4 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./analysisList";
+export * from "./analysisResult";
+export * from "./analyzeTransactionBody";
+export * from "./errorResponse";
 export * from "./healthStatus";
+export * from "./listAnalysesParams";
