@@ -31,7 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   transaction: z.string().min(1, "Transaction signature is required").max(2000),
   userIntent: z.string().min(10, "Please provide more detail about your intent").max(1000),
-  rpcUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  rpcUrl: z.string().max(500),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -41,7 +41,10 @@ export function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    // zod 3.25 changed internal declaration paths (zod/v3/ZodError vs zod/ZodError),
+    // causing a structural type conflict with @hookform/resolvers@3.x. Runtime is unaffected.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(formSchema as any),
     defaultValues: {
       transaction: "",
       userIntent: "",
