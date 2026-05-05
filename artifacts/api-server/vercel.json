@@ -3,11 +3,9 @@
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "buildCommand": "echo 'build complete'",
   "functions": {
-    "api/analyze.ts": {
+    "api/*.ts": {
+      "runtime": "@vercel/node",
       "maxDuration": 30
-    },
-    "api/analyses.ts": {
-      "maxDuration": 10
     }
   },
   "headers": [
@@ -16,7 +14,7 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization" }
       ]
     }
   ]
