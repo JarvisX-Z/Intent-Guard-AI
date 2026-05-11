@@ -9,12 +9,17 @@
 
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
-    <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+
+    <!-- Load Eruda safely -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-      if (window.location.hostname !== "localhost") {
-        eruda.init();
-      }
+      window.addEventListener("DOMContentLoaded", () => {
+        if (window.location.hostname !== "localhost" && window.eruda) {
+          eruda.init();
+        }
+      });
     </script>
   </body>
 </html>
