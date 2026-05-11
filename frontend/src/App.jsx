@@ -12,6 +12,9 @@ export default function App() {
   const API_URL = import.meta.env.VITE_API_URL || "";
 
   const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    // Show error if API URL is missing
     if (!API_URL) {
       setMessages((prev) => [
         ...prev,
@@ -22,7 +25,6 @@ export default function App() {
       ]);
       return;
     }
-    if (!input.trim()) return;
 
     // Add user message
     const userMsg = { role: "user", text: input };
@@ -61,12 +63,13 @@ export default function App() {
     } catch (error) {
       console.error("Fetch error:", error);
 
-      const botMsg = {
-        role: "bot",
-        text: "Error connecting to backend.",
-      };
-
-      setMessages((prev) => [...prev, botMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: "Error connecting to backend.",
+        },
+      ]);
     }
   };
 
