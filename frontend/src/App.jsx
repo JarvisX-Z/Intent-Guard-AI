@@ -94,3 +94,87 @@ export default function App() {
     </div>
   );
 }
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "radial-gradient(circle at top, #0b0f19, #05070f)",
+    color: "white",
+    fontFamily: "Inter, Arial, sans-serif",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "40px"
+  },
+
+  header: {
+    textAlign: "center",
+    marginBottom: "30px"
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: "520px",
+    background: "rgba(18, 26, 42, 0.85)",
+    padding: "24px",
+    borderRadius: "16px",
+    boxShadow: "0 10px 40px rgba(0,0,0,0.6)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.08)"
+  },
+
+  input: {
+    width: "100%",
+    padding: "12px",
+    margin: "10px 0 16px 0",
+    borderRadius: "10px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    outline: "none",
+    background: "#0f172a",
+    color: "white"
+  },
+
+  textarea: {
+    width: "100%",
+    height: "90px",
+    padding: "12px",
+    margin: "10px 0 16px 0",
+    borderRadius: "10px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    outline: "none",
+    background: "#0f172a",
+    color: "white",
+    resize: "none"
+  },
+
+  button: {
+    width: "100%",
+    padding: "12px",
+    background: "linear-gradient(90deg, #4f46e5, #7c3aed)",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    transition: "0.2s ease"
+  },
+
+  resultBox: {
+    marginTop: "20px",
+    padding: "16px",
+    background: "#0b1220",
+    borderRadius: "10px",
+    border: "1px solid rgba(255,255,255,0.08)"
+  },
+
+  subText: {
+    fontSize: "13px",
+    opacity: 0.7
+  },
+
+  footer: {
+    marginTop: "25px",
+    fontSize: "12px",
+    opacity: 0.6,
+    textAlign: "center"
+  }
+};
