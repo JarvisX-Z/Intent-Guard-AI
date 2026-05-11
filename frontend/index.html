@@ -12,14 +12,12 @@
 
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- Load Eruda safely -->
+    <!-- Eruda (ONLY for localhost debugging) -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        if (window.location.hostname !== "localhost" && window.eruda) {
-          eruda.init();
-        }
-      });
+      if (window.location.hostname === "localhost" && window.eruda) {
+        window.eruda.init();
+      }
     </script>
   </body>
 </html>
