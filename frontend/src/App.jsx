@@ -2,11 +2,26 @@ import { useState } from "react";
 
 export default function App() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    {
+      role: "bot",
+      text: "Hello! I am Intent Guard AI. How can I help you today?",
+    },
+  ]);
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || "";
 
   const sendMessage = async () => {
+    if (!API_URL) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: "Backend API URL is not configured.",
+        },
+      ]);
+      return;
+    }
     if (!input.trim()) return;
 
     // Add user message
