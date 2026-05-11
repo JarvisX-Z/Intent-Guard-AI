@@ -5,20 +5,34 @@ export default function App() {
   const [messages, setMessages] = useState([]);
 
   const sendMessage = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
     const userMsg = { role: "user", text: input };
-    setMessages(prev => [...prev, userMsg]);
-
-    const res = await fetch("https://intent-guard-ai-3.onrender.com/");
-    const data = await res.text();
-
-    const botMsg = { role: "bot", text: data };
-    setMessages(prev => [...prev, botMsg]);
-
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
-  };
 
+    try {
+      const res = await fetch("https://intent-guard-ai-3.onrender.com/");
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.text();
+
+      const botMsg = { role: "bot", text: data };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (error) {
+      const botMsg = {
+        role: "bot",
+        text: "Error connecting to backend.",
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+      console.error("Fetch error:", error);
+    }
+  };
+      
   return (
     <div style={{
       height: "100vh",
