@@ -8,162 +8,181 @@ export default function App() {
       text: "Hello! I am Intent Guard AI. How can I help you today?",
     },
   ]);
+  const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "";
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    // Show error if API URL is missing
     if (!API_URL) {
       setMessages((prev) => [
         ...prev,
-        {
-          role: "bot",
-          text: "Backend API URL is not configured.",
-        },
+        { role: "bot", text: "Backend API URL is not configured." },
       ]);
       return;
     }
 
-    // Add user message
     const userMsg = { role: "user", text: input };
     setMessages((prev) => [...prev, userMsg]);
 
     const currentInput = input;
     setInput("");
+    setLoading(true);
 
     try {
       const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: currentInput,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: currentInput }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status}`);
-      }
+      if (!res.ok) throw new Error("Server error");
 
       const data = await res.json();
 
       const botMsg = {
         role: "bot",
-        text:
-          data.reply ||
-          data.response ||
-          data.message ||
-          "No response from AI.",
+        text: data.reply || data.response || data.message || "No response.",
       };
 
       setMessages((prev) => [...prev, botMsg]);
-    } catch (error) {
-      console.error("Fetch error:", error);
-
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
-        {
-          role: "bot",
-          text: "Error connecting to backend.",
-        },
+        { role: "bot", text: "Error connecting to backend." },
       ]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        background: "#0f172a",
-        color: "white",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <h1 style={{ marginTop: 20 }}>🧠 Intent Guard AI</h1>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        🧠 Intent Guard AI
+      </div>
 
-      <div
-        style={{
-          width: "90%",
-          maxWidth: 600,
-          flex: 1,
-          overflowY: "auto",
-          marginTop: 20,
-        }}
-      >
+      {/* Chat Box */}
+      <div style={styles.chatBox}>
         {messages.map((m, i) => (
           <div
             key={i}
             style={{
-              textAlign: m.role === "user" ? "right" : "left",
-              margin: "10px 0",
+              ...styles.messageRow,
+              justifyContent: m.role === "user" ? "flex-end" : "flex-start",
             }}
           >
-            <span
+            <div
               style={{
-                display: "inline-block",
-                padding: "10px 14px",
-                borderRadius: 10,
+                ...styles.bubble,
                 background:
-                  m.role === "user" ? "#2563eb" : "#1e293b",
-                maxWidth: "80%",
-                wordBreak: "break-word",
+                  m.role === "user"
+                    ? "linear-gradient(135deg, #3b82f6, #2563eb)"
+                    : "#1f2937",
+                borderBottomRightRadius: m.role === "user" ? 0 : 12,
+                borderBottomLeftRadius: m.role === "bot" ? 0 : 12,
               }}
             >
               {m.text}
-            </span>
+            </div>
           </div>
         ))}
+
+        {loading && (
+          <div style={styles.messageRow}>
+            <div style={{ ...styles.bubble, background: "#1f2937" }}>
+              Typing...
+            </div>
+          </div>
+        )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          width: "90%",
-          maxWidth: 600,
-          marginBottom: 20,
-        }}
-      >
+      {/* Input Box */}
+      <div style={styles.inputArea}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              sendMessage();
-            }
-          }}
-          placeholder="Ask something..."
-          style={{
-            flex: 1,
-            padding: 12,
-            borderRadius: 8,
-            border: "none",
-            outline: "none",
-            fontSize: 16,
-          }}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="Ask anything..."
+          style={styles.input}
         />
 
-        <button
-          onClick={sendMessage}
-          style={{
-            marginLeft: 10,
-            padding: "12px 20px",
-            background: "#22c55e",
-            color: "white",
-            borderRadius: 8,
-            border: "none",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
+        <button onClick={sendMessage} style={styles.button}>
           Send
         </button>
       </div>
     </div>
   );
-        }
+}
+
+/* 🎨 STYLES */
+const styles = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    background: "linear-gradient(135deg, #0f172a, #111827)",
+    color: "white",
+    fontFamily: "Arial",
+  },
+
+  header: {
+    padding: 18,
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    borderBottom: "1px solid #1f2937",
+  },
+
+  chatBox: {
+    flex: 1,
+    padding: 15,
+    overflowY: "auto",
+  },
+
+  messageRow: {
+    display: "flex",
+    marginBottom: 10,
+  },
+
+  bubble: {
+    maxWidth: "75%",
+    padding: "10px 14px",
+    borderRadius: 14,
+    color: "white",
+    fontSize: 15,
+    lineHeight: 1.4,
+    wordBreak: "break-word",
+  },
+
+  inputArea: {
+    display: "flex",
+    padding: 12,
+    borderTop: "1px solid #1f2937",
+    background: "#0b1220",
+  },
+
+  input: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    border: "none",
+    outline: "none",
+    fontSize: 15,
+    background: "#111827",
+    color: "white",
+  },
+
+  button: {
+    marginLeft: 10,
+    padding: "10px 18px",
+    borderRadius: 10,
+    border: "none",
+    background: "linear-gradient(135deg, #22c55e, #16a34a)",
+    color: "white",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+};
