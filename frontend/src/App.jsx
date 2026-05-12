@@ -88,7 +88,7 @@ export default function App() {
       <footer style={styles.footer}>
         © 2026 IntentGuard AI. Verifying Solana transactions.
         <br />
-        Powered by Replit
+        Powered by Jarvis Z-X
       </footer>
 
     </div>
